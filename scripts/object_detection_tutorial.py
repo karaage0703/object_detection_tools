@@ -1,6 +1,6 @@
 # coding: utf-8
 # Object Detection Demo
-
+import argparse
 import cv2
 import numpy as np
 import os
@@ -25,20 +25,22 @@ from utils import label_map_util
 from utils import visualization_utils as vis_util
 
 # Path to label and frozen detection graph. This is the actual model that is used for the object detection.
-PATH_TO_LABELS = './object_detection/data/mscoco_label_map.pbtxt'
-PATH_TO_FROZEN_GRAPH = './object_detection_tools/models/ssd_inception_v2_coco_2018_01_28/frozen_inference_graph.pb'
+parser = argparse.ArgumentParser(description='object_detection_tutorial.')
+parser.add_argument('-l', '--labels', default='./object_detection_tools/data/tf_label_map.pbtxt')
+parser.add_argument('-m', '--model', default='./exported_graphs/frozen_inference_graph.pb')
+
+args = parser.parse_args()
 
 # Load a (frozen) Tensorflow model into memory.
 detection_graph = tf.Graph()
 with detection_graph.as_default():
   od_graph_def = tf.GraphDef()
-  with tf.gfile.GFile(PATH_TO_FROZEN_GRAPH, 'rb') as fid:
+  with tf.gfile.GFile(args.model, 'rb') as fid:
     serialized_graph = fid.read()
     od_graph_def.ParseFromString(serialized_graph)
     tf.import_graph_def(od_graph_def, name='')
 
-
-category_index = label_map_util.create_category_index_from_labelmap(PATH_TO_LABELS, use_display_name=True)
+category_index = label_map_util.create_category_index_from_labelmap(args.labels, use_display_name=True)
 
 def load_image_into_numpy_array(image):
   (im_width, im_height) = image.size

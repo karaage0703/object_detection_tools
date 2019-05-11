@@ -20,8 +20,8 @@ Go ahead under `models/research` directory
 
 ```sh
 $ git clone https://github.com/karaage0703/object_detection_tools
+$ ln -sf $PWD/object_detection_tools/scripts/object_detection_tutorial.py $PWD/object_detection/object_detection_tutorial.py
 ```
-
 
 ## Model download
 Change directory `models` and execute download scripts.
@@ -37,8 +37,8 @@ $ ./get_ssd_inception_v2_coco_model.sh
 Execute following commands at `models/research` after downloading ssd_inception_v2_coco_model data:
 ```sh
 $ cp object_detection_tools/scripts/object_detection_tutorial.py ./object_detection/
-$ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim 
-$ python object_detection/object_detection_tutorial.py
+$ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+$ python object_detection/object_detection_tutorial.py -l='object_detection/data/mscoco_label_map.pbtxt' -m='object_detection_tools/models/ssd_inception_v2_coco_2018_01_28/frozen_inference_graph.pb'
 ```
 
 ## Train
@@ -56,6 +56,7 @@ Then, execute following command at `object_detection_tools/data` directory:
 ```sh
 $ ./change_tfrecord_filename.sh
 ```
+
 ## Train Models
 
 
@@ -81,9 +82,18 @@ $ python object_detection/model_main.py --pipeline_config_path="./object_detecti
 
 ## Convert Model
 Convert from ckpt to graph file:
+
+### ssd inception v2 example
 ```sh
 $ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
-$ python object_detection/export_inference_graph.py --input_type image_tensor --pipeline_config_path models/model/faster_rcnn_resnet101_pets.config --trained_checkpoint_prefix models/model/model.ckpt-10 --output_directory exported_graphs
+$ python object_detection/export_inference_graph.py --input_type image_tensor --pipeline_config_path object_detection_tools/config/ssd_inception_v2_coco.config --trained_checkpoint_prefix saved_model_01/model.ckpt-1000 --output_directory exported_graphs
+```
+
+## Test trained models
+
+```sh
+$ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+$ python object_detection/object_detection_tutorial.py -l='./object_detection_tools/data/tf_label_map.pbtxt' -m='./exported_graphs/frozen_inference_graph.pb'
 ```
 
 # License
