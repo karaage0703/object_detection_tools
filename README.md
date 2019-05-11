@@ -36,7 +36,6 @@ $ ./get_ssd_inception_v2_coco_model.sh
 ## Test Prediction
 Execute following commands at `models/research` after downloading ssd_inception_v2_coco_model data:
 ```sh
-$ cp object_detection_tools/scripts/object_detection_tutorial.py ./object_detection/
 $ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 $ python object_detection/object_detection_tutorial.py -l='object_detection/data/mscoco_label_map.pbtxt' -m='object_detection_tools/models/ssd_inception_v2_coco_2018_01_28/frozen_inference_graph.pb'
 ```
