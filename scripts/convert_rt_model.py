@@ -12,7 +12,7 @@ from tf_trt_models.detection import download_detection_model, build_detection_gr
 # Path to label and frozen detection graph. This is the actual model that is used for the object detection.
 parser = argparse.ArgumentParser(description='convert_rt_model.')
 parser.add_argument('-c', '--config', default='./parallels.config')
-parser.add_argument('-m', '--model', default='./model.ckp')
+parser.add_argument('-m', '--model', default='./model.ckpt')
 parser.add_argument('-o', '--output', default='./exported_graphs/frozen_inference_graph_trt.pb')
 
 args = parser.parse_args()
