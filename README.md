@@ -12,32 +12,28 @@ $ git clone https://github.com/tensorflow/models
 $ cd models/research
 ```
 
-Go ahead under `models/research` directory
+Go to `models/research` directory
 
 # Usage
 
 ## Download this repository
-
 ```sh
 $ git clone https://github.com/karaage0703/object_detection_tools
-$ ln -sf $PWD/object_detection_tools/scripts/object_detection_tutorial.py $PWD/object_detection/object_detection_tutorial.py
 ```
 
 ## Model download
-Change directory `models` and execute download scripts.
+Change directory `object_detection_tools/models` and execute download script for downloading model file:
 
 For example:
 
 ```sh
-$ cd models
 $ ./get_ssd_inception_v2_coco_model.sh
 ```
 
 ## Test Prediction
-Execute following commands at `models/research` after downloading ssd_inception_v2_coco_model data:
+Execute following commands at `object_detection_tools` after downloading ssd_inception_v2_coco_model data:
 ```sh
-$ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
-$ python object_detection/object_detection_tutorial.py -l='object_detection/data/mscoco_label_map.pbtxt' -m='object_detection_tools/models/ssd_inception_v2_coco_2018_01_28/frozen_inference_graph.pb'
+$ python scripts/object_detection.py -l='models/coco-labels-paper.txt' -m='models/ssd_inception_v2_coco_2018_01_28/frozen_inference_graph.pb'
 ```
 
 ## Train
@@ -57,14 +53,11 @@ $ ./change_tfrecord_filename.sh
 ```
 
 ## Train Models
+SSD inception v2 example(fine tuning)
 
-
-### ssd inception v2 example
-Download ssd model
+Change directory `object_detection_tools/models` and execute download script for downloading model file:
 ```sh
-$ cd models
 $ ./get_ssd_inception_v2
-$ cd ..
 ```
 
 Train model
@@ -73,26 +66,28 @@ $ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 $ python object_detection/model_main.py --pipeline_config_path="./object_detection_tools/config/ssd_inception_v2_coco.config" --model_dir="./saved_model_01" --num_train_steps=1000 --alsologtostderr
 ```
 
-### faster rcnn example
-```sh
-$ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
-$ python object_detection/model_main.py --pipeline_config_path="./object_detection_tools/config/faster_rcnn_resnet101_pets.config" --model_dir="./saved_model_01" --num_train_steps=1000 --alsologtostderr
-```
-
 ## Convert Model
-Convert from ckpt to graph file:
+Convert from ckpt to graph file.
 
-### ssd inception v2 example
+Execute following commands for converting from ckpt to graph file:
 ```sh
 $ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 $ python object_detection/export_inference_graph.py --input_type image_tensor --pipeline_config_path object_detection_tools/config/ssd_inception_v2_coco.config --trained_checkpoint_prefix saved_model_01/model.ckpt-1000 --output_directory exported_graphs
 ```
 
-## Test trained models
+## Convert Label
+Convert from pbtxt data to label data.
 
+Execute follwing commands for converting from pbtxt data to label data:
 ```sh
 $ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
-$ python object_detection/object_detection_tutorial.py -l='./object_detection_tools/data/tf_label_map.pbtxt' -m='./exported_graphs/frozen_inference_graph.pb'
+$ python object_detection_tools/scripts/convert_pbtxt_label.py -l='object_detection/data/tf_labl_map.pbtxt' > ./exported_graphs/labels.txt
+```
+
+## Test trained model
+Execute following command for testing trained model:
+```sh
+$ python object_detection/object_detection.py -l='./exported_graphs/labels.txt' -m='./exported_graphs/frozen_inference_graph.pb'
 ```
 
 # License
@@ -101,3 +96,4 @@ This software is released under the Apache 2.0 License, see LICENSE.
 
 # References
 - https://github.com/tensorflow/models
+- https://github.com/tsutof/tf-trt-ssd

@@ -4,25 +4,13 @@ import argparse
 import cv2
 import numpy as np
 import os
-import six.moves.urllib as urllib
 import sys
-import tarfile
 import tensorflow as tf
-import zipfile
 
 from distutils.version import StrictVersion
-from collections import defaultdict
-from io import StringIO
-from matplotlib import pyplot as plt
-from PIL import Image
-
-from object_detection.utils import ops as utils_ops
 
 if StrictVersion(tf.__version__) < StrictVersion('1.12.0'):
   raise ImportError('Please upgrade your TensorFlow installation to v1.12.*.')
-
-from object_detection.utils import label_map_util
-from object_detection.utils import visualization_utils as vis_util
 
 # Path to label and frozen detection graph. This is the actual model that is used for the object detection.
 parser = argparse.ArgumentParser(description='object_detection_tutorial.')
@@ -39,8 +27,6 @@ with detection_graph.as_default():
     serialized_graph = fid.read()
     od_graph_def.ParseFromString(serialized_graph)
     tf.import_graph_def(od_graph_def, name='')
-
-category_index = label_map_util.create_category_index_from_labelmap(args.labels, use_display_name=True)
 
 def load_image_into_numpy_array(image):
   (im_width, im_height) = image.size
@@ -62,21 +48,7 @@ def run_inference_for_single_image(image, graph):
         if tensor_name in all_tensor_names:
           tensor_dict[key] = tf.get_default_graph().get_tensor_by_name(
               tensor_name)
-      if 'detection_masks' in tensor_dict:
-        # The following processing is only for single image
-        detection_boxes = tf.squeeze(tensor_dict['detection_boxes'], [0])
-        detection_masks = tf.squeeze(tensor_dict['detection_masks'], [0])
-        # Reframe is required to translate mask from box coordinates to image coordinates and fit the image size.
-        real_num_detection = tf.cast(tensor_dict['num_detections'][0], tf.int32)
-        detection_boxes = tf.slice(detection_boxes, [0, 0], [real_num_detection, -1])
-        detection_masks = tf.slice(detection_masks, [0, 0, 0], [real_num_detection, -1, -1])
-        detection_masks_reframed = utils_ops.reframe_box_masks_to_image_masks(
-            detection_masks, detection_boxes, image.shape[1], image.shape[2])
-        detection_masks_reframed = tf.cast(
-            tf.greater(detection_masks_reframed, 0.5), tf.uint8)
-        # Follow the convention by adding back the batch dimension
-        tensor_dict['detection_masks'] = tf.expand_dims(
-            detection_masks_reframed, 0)
+
       image_tensor = tf.get_default_graph().get_tensor_by_name('image_tensor:0')
 
       # Run inference
@@ -89,29 +61,31 @@ def run_inference_for_single_image(image, graph):
           'detection_classes'][0].astype(np.int64)
       output_dict['detection_boxes'] = output_dict['detection_boxes'][0]
       output_dict['detection_scores'] = output_dict['detection_scores'][0]
-      if 'detection_masks' in output_dict:
-        output_dict['detection_masks'] = output_dict['detection_masks'][0]
   return output_dict
 
 cam = cv2.VideoCapture(0)
 
-count_max = 30
+count_max = 0
 
 if __name__ == '__main__':
     count = 0
+
+    labels = ['blank']
+    with open(args.labels,'r') as f:
+        for line in f:
+            labels.append(line.rstrip())
+
     while True:
         ret, img = cam.read()
         if not ret:
             print('error')
             break
-        # cv2.imshow('keras-pi inspector', capture)
         key = cv2.waitKey(1)
         if key == 27: # when ESC key is pressed break
             break
 
         count += 1
-
-        if count == count_max:
+        if count > count_max:
             img_bgr = cv2.resize(img, (300, 300))
 
             # convert bgr to rgb
@@ -119,20 +93,29 @@ if __name__ == '__main__':
             image_np_expanded = np.expand_dims(image_np, axis=0)
             output_dict = run_inference_for_single_image(image_np_expanded, detection_graph)
 
-            # Visualization of the results of a detection.
-            vis_util.visualize_boxes_and_labels_on_image_array(
-                image_np,
-                output_dict['detection_boxes'],
-                output_dict['detection_classes'],
-                output_dict['detection_scores'],
-                category_index,
-                instance_masks=output_dict.get('detection_masks'),
-                use_normalized_coordinates=True,
-                line_thickness=8)
+            for i in range(output_dict['num_detections']):
+              class_id = output_dict['detection_classes'][i]
+              if class_id < len(labels):
+                label = labels[class_id]
+              else:
+                label = 'unknown'
 
-            # convert rgb to bgr
-            image_bgr = image_np[:,:,::-1]
-            cv2.imshow('detection result', image_bgr)
+              detection_score = output_dict['detection_scores'][i]
+
+              # Draw bounding box
+              h, w, c = img.shape
+              box = output_dict['detection_boxes'][i] * np.array( \
+                  [h, w,  h, w])
+              box = box.astype(np.int)
+              cv2.rectangle(img, \
+                  (box[1], box[0]), (box[3], box[2]), (0, 0, 255), 3)
+
+              # Put label near bounding box
+              information = '%s: %f' % (label, output_dict['detection_scores'][i])
+              cv2.putText(img, information, (box[1], box[2]), \
+                  cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
+
+            cv2.imshow('detection result', img)
             count = 0
 
     cam.release()
