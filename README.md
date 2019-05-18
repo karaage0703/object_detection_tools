@@ -60,11 +60,13 @@ Change directory `object_detection_tools/models` and execute download script for
 $ ./get_ssd_inception_v2
 ```
 
-Train model
+Execute following commands for training model:
 ```sh
 $ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
 $ python object_detection/model_main.py --pipeline_config_path="./object_detection_tools/config/ssd_inception_v2_coco.config" --model_dir="./saved_model_01" --num_train_steps=1000 --alsologtostderr
 ```
+
+notice: `model_dir` must be empty before training
 
 ## Convert Model
 Convert from ckpt to graph file.
@@ -87,7 +89,7 @@ $ python object_detection_tools/scripts/convert_pbtxt_label.py -l='object_detect
 ## Test trained model
 Execute following command for testing trained model:
 ```sh
-$ python object_detection/object_detection.py -l='./exported_graphs/labels.txt' -m='./exported_graphs/frozen_inference_graph.pb'
+$ python object_detection_tools/scripts/object_detection.py -l='./exported_graphs/labels.txt' -m='./exported_graphs/frozen_inference_graph.pb'
 ```
 
 # License
