@@ -16,6 +16,7 @@ if StrictVersion(tf.__version__) < StrictVersion('1.12.0'):
 parser = argparse.ArgumentParser(description='object_detection_tutorial.')
 parser.add_argument('-l', '--labels', default='./object_detection_tools/data/tf_label_map.pbtxt')
 parser.add_argument('-m', '--model', default='./exported_graphs/frozen_inference_graph.pb')
+parser.add_argument('-d', '--device', default='normal_cam')
 
 args = parser.parse_args()
 
@@ -63,7 +64,22 @@ def run_inference_for_single_image(image, graph):
       output_dict['detection_scores'] = output_dict['detection_scores'][0]
   return output_dict
 
-cam = cv2.VideoCapture(0)
+# Switch camera according to device
+if args.device == 'normal_cam':
+  cam = cv2.VideoCapture(0)
+elif args.device == 'jetson_nano_raspi_cam':
+  GST_STR = 'nvarguscamerasrc \
+    ! video/x-raw(memory:NVMM), width=3280, height=2464, format=(string)NV12, framerate=(fraction)30/1 \
+    ! nvvidconv ! video/x-raw, width=(int)1920, height=(int)1080, format=(string)BGRx \
+    ! videoconvert \
+    ! appsink'
+  cam = cv2.VideoCapture(GST_STR, cv2.CAP_GSTREAMER) # Raspi cam
+elif args.device == 'jetson_nano_web_cam':
+  cam = cv2.VideoCapture(1)
+else:
+  print('wrong device')
+  sys.exit()
+
 
 count_max = 0
 
