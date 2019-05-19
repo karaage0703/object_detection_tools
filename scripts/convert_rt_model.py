@@ -1,12 +1,8 @@
 # coding: utf-8
 import argparse
-from PIL import Image
 import sys
 import os
 import tensorflow.contrib.tensorrt as trt
-import tensorflow as tf
-import numpy as np
-import time
 from tf_trt_models.detection import download_detection_model, build_detection_graph
 
 # Path to label and frozen detection graph. This is the actual model that is used for the object detection.
@@ -22,6 +18,7 @@ frozen_graph, input_names, output_names = build_detection_graph(
     checkpoint=args.model,
     score_threshold=0.3,
     batch_size=1
+)
 
 trt_graph = trt.create_inference_graph(
     input_graph_def=frozen_graph,
