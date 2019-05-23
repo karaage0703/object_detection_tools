@@ -17,7 +17,6 @@ parser = argparse.ArgumentParser(description='object_detection_tutorial.')
 parser.add_argument('-l', '--labels', default='./object_detection_tools/data/tf_label_map.pbtxt')
 parser.add_argument('-m', '--model', default='./exported_graphs/frozen_inference_graph.pb')
 parser.add_argument('-d', '--device', default='normal_cam') # normal_cam / jetson_nano_raspi_cam / jetson_nano_web_cam
-parser.add_argument('-g', '--gpu', default='disable') # enable / disable
 
 args = parser.parse_args()
 
