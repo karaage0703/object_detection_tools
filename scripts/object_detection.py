@@ -16,18 +16,26 @@ if StrictVersion(tf.__version__) < StrictVersion('1.12.0'):
 parser = argparse.ArgumentParser(description='object_detection_tutorial.')
 parser.add_argument('-l', '--labels', default='./object_detection_tools/data/tf_label_map.pbtxt')
 parser.add_argument('-m', '--model', default='./exported_graphs/frozen_inference_graph.pb')
-parser.add_argument('-d', '--device', default='normal_cam')
+parser.add_argument('-d', '--device', default='normal_cam') # normal_cam / jetson_nano_raspi_cam / jetson_nano_web_cam
+parser.add_argument('-g', '--gpu', default='disable') # enable / disable
 
 args = parser.parse_args()
 
+def load_graph_def():
+   with tf.gfile.GFile(args.model, 'rb') as f:
+    graph_def = tf.GraphDef()
+    graph_def.ParseFromString(f.read())
+    return graph_def
+
 # Load a (frozen) Tensorflow model into memory.
 detection_graph = tf.Graph()
-with detection_graph.as_default():
-  od_graph_def = tf.GraphDef()
-  with tf.gfile.GFile(args.model, 'rb') as fid:
-    serialized_graph = fid.read()
-    od_graph_def.ParseFromString(serialized_graph)
-    tf.import_graph_def(od_graph_def, name='')
+detection_graph = load_graph_def()
+tf_config = tf.ConfigProto()
+tf_config.gpu_options.allow_growth = True
+tf_sess = tf.Session(config = tf_config)
+print('Loading graph...')
+tf.import_graph_def(detection_graph, name = '')
+print('Graph is loaded')
 
 def load_image_into_numpy_array(image):
   (im_width, im_height) = image.size
@@ -35,33 +43,30 @@ def load_image_into_numpy_array(image):
       (im_height, im_width, 3)).astype(np.uint8)
 
 def run_inference_for_single_image(image, graph):
-  with graph.as_default():
-    with tf.Session() as sess:
-      # Get handles to input and output tensors
-      ops = tf.get_default_graph().get_operations()
-      all_tensor_names = {output.name for op in ops for output in op.outputs}
-      tensor_dict = {}
-      for key in [
-          'num_detections', 'detection_boxes', 'detection_scores',
-          'detection_classes', 'detection_masks'
-      ]:
-        tensor_name = key + ':0'
-        if tensor_name in all_tensor_names:
-          tensor_dict[key] = tf.get_default_graph().get_tensor_by_name(
-              tensor_name)
+  ops = tf.get_default_graph().get_operations()
+  all_tensor_names = {output.name for op in ops for output in op.outputs}
+  tensor_dict = {}
+  for key in [
+      'num_detections', 'detection_boxes', 'detection_scores',
+      'detection_classes', 'detection_masks'
+  ]:
+    tensor_name = key + ':0'
+    if tensor_name in all_tensor_names:
+      tensor_dict[key] = tf.get_default_graph().get_tensor_by_name(
+          tensor_name)
 
-      image_tensor = tf.get_default_graph().get_tensor_by_name('image_tensor:0')
+  image_tensor = tf.get_default_graph().get_tensor_by_name('image_tensor:0')
 
-      # Run inference
-      output_dict = sess.run(tensor_dict,
-                             feed_dict={image_tensor: image})
+  # Run inference
+  output_dict = tf_sess.run(tensor_dict,
+                          feed_dict={image_tensor: image})
 
-      # all outputs are float32 numpy arrays, so convert types as appropriate
-      output_dict['num_detections'] = int(output_dict['num_detections'][0])
-      output_dict['detection_classes'] = output_dict[
-          'detection_classes'][0].astype(np.int64)
-      output_dict['detection_boxes'] = output_dict['detection_boxes'][0]
-      output_dict['detection_scores'] = output_dict['detection_scores'][0]
+  # all outputs are float32 numpy arrays, so convert types as appropriate
+  output_dict['num_detections'] = int(output_dict['num_detections'][0])
+  output_dict['detection_classes'] = output_dict[
+      'detection_classes'][0].astype(np.int64)
+  output_dict['detection_boxes'] = output_dict['detection_boxes'][0]
+  output_dict['detection_scores'] = output_dict['detection_scores'][0]
   return output_dict
 
 # Switch camera according to device
@@ -79,7 +84,6 @@ elif args.device == 'jetson_nano_web_cam':
 else:
   print('wrong device')
   sys.exit()
-
 
 count_max = 0
 
@@ -134,5 +138,6 @@ if __name__ == '__main__':
             cv2.imshow('detection result', img)
             count = 0
 
+    tf_sess.close()
     cam.release()
     cv2.destroyAllWindows()
