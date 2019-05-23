@@ -17,12 +17,13 @@ Go to `models/research` directory
 # Usage
 
 ## Download this repository
+Execute following command:
 ```sh
 $ git clone https://github.com/karaage0703/object_detection_tools
 ```
 
 ## Model download
-Change directory `object_detection_tools/models` and execute download script for downloading model file:
+Change directory `object_detection_tools/models` and execute download script for downloading model file.
 
 For example:
 
