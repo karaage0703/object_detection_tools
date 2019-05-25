@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 import os
 import sys
+import time
 import tensorflow as tf
 
 from distutils.version import StrictVersion
@@ -17,31 +18,41 @@ parser = argparse.ArgumentParser(description='object_detection_tutorial.')
 parser.add_argument('-l', '--labels', default='./object_detection_tools/data/tf_label_map.pbtxt')
 parser.add_argument('-m', '--model', default='./exported_graphs/frozen_inference_graph.pb')
 parser.add_argument('-d', '--device', default='normal_cam') # normal_cam / jetson_nano_raspi_cam / jetson_nano_web_cam
+# parser.add_argument('--mode', default='bbox') # bbox / mosaic
 
 args = parser.parse_args()
 
-def load_graph_def():
-   with tf.gfile.GFile(args.model, 'rb') as f:
-    graph_def = tf.GraphDef()
-    graph_def.ParseFromString(f.read())
-    return graph_def
+detection_graph = tf.Graph()
+
+mode = 'bbox'
+
+def load_graph():
+  with detection_graph.as_default():
+    od_graph_def = tf.GraphDef()
+    with tf.gfile.GFile(args.model, 'rb') as fid:
+      serialized_graph = fid.read()
+      od_graph_def.ParseFromString(serialized_graph)
+      tf.import_graph_def(od_graph_def, name='')
+    return detection_graph
+
+def mosaic(src, ratio=0.1):
+    small = cv2.resize(src, None, fx=ratio, fy=ratio, interpolation=cv2.INTER_NEAREST)
+    return cv2.resize(small, src.shape[:2][::-1], interpolation=cv2.INTER_NEAREST)
+
+def mosaic_area(src, x_min, y_min, x_max, y_max, ratio=0.1):
+    dst = src.copy()
+    dst[y_min:y_max, x_min:x_max] = mosaic(dst[y_min:y_max, x_min:x_max], ratio)
+    return dst
 
 # Load a (frozen) Tensorflow model into memory.
-detection_graph = tf.Graph()
-detection_graph = load_graph_def()
-tf_config = tf.ConfigProto()
-tf_config.gpu_options.allow_growth = True
-tf_sess = tf.Session(config = tf_config)
 print('Loading graph...')
-tf.import_graph_def(detection_graph, name = '')
+detection_graph = load_graph()
 print('Graph is loaded')
 
-def load_image_into_numpy_array(image):
-  (im_width, im_height) = image.size
-  return np.array(image.getdata()).reshape(
-      (im_height, im_width, 3)).astype(np.uint8)
-
-def run_inference_for_single_image(image, graph):
+tf_config = tf.ConfigProto()
+tf_config.gpu_options.allow_growth = True
+with detection_graph.as_default():
+  tf_sess = tf.Session(config = tf_config)
   ops = tf.get_default_graph().get_operations()
   all_tensor_names = {output.name for op in ops for output in op.outputs}
   tensor_dict = {}
@@ -56,6 +67,7 @@ def run_inference_for_single_image(image, graph):
 
   image_tensor = tf.get_default_graph().get_tensor_by_name('image_tensor:0')
 
+def run_inference_for_single_image(image, graph):
   # Run inference
   output_dict = tf_sess.run(tensor_dict,
                           feed_dict={image_tensor: image})
@@ -100,7 +112,11 @@ if __name__ == '__main__':
             print('error')
             break
         key = cv2.waitKey(1)
-        if key == 27: # when ESC key is pressed break
+        if key == 77 or key == 109: # when m or M key is pressed, go to mosaic mode
+          mode = 'mosaic'
+        elif key == 66 or key == 98: # when b or B key is pressed, go to bbox mode
+          mode = 'bbox'
+        elif key == 27: # when ESC key is pressed break
             break
 
         count += 1
@@ -110,7 +126,9 @@ if __name__ == '__main__':
             # convert bgr to rgb
             image_np = img_bgr[:,:,::-1]
             image_np_expanded = np.expand_dims(image_np, axis=0)
+            start = time.time()
             output_dict = run_inference_for_single_image(image_np_expanded, detection_graph)
+            elapsed_time = time.time() - start
 
             for i in range(output_dict['num_detections']):
               class_id = output_dict['detection_classes'][i]
@@ -121,18 +139,27 @@ if __name__ == '__main__':
 
               detection_score = output_dict['detection_scores'][i]
 
-              # Draw bounding box
+              # Define bounding box
               h, w, c = img.shape
               box = output_dict['detection_boxes'][i] * np.array( \
                   [h, w,  h, w])
               box = box.astype(np.int)
-              cv2.rectangle(img, \
-                  (box[1], box[0]), (box[3], box[2]), (0, 0, 255), 3)
 
-              # Put label near bounding box
-              information = '%s: %f' % (label, output_dict['detection_scores'][i])
-              cv2.putText(img, information, (box[1], box[2]), \
+              speed_info = '%s: %f' % ('speed=', elapsed_time)
+              cv2.putText(img, speed_info, (10,50), \
                   cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
+
+              if mode == 'bbox':
+                # Draw bounding box
+                cv2.rectangle(img, \
+                    (box[1], box[0]), (box[3], box[2]), (0, 0, 255), 3)
+
+                # Put label near bounding box
+                information = '%s: %f' % (label, output_dict['detection_scores'][i])
+                cv2.putText(img, information, (box[1], box[2]), \
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
+              elif mode == 'mosaic':
+                img = mosaic_area(img, box[1], box[0], box[3], box[2], ratio=0.05)
 
             cv2.imshow('detection result', img)
             count = 0
