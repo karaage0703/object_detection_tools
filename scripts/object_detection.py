@@ -99,71 +99,71 @@ else:
 count_max = 0
 
 if __name__ == '__main__':
-    count = 0
+  count = 0
 
-    labels = ['blank']
-    with open(args.labels,'r') as f:
-        for line in f:
-            labels.append(line.rstrip())
+  labels = ['blank']
+  with open(args.labels,'r') as f:
+    for line in f:
+      labels.append(line.rstrip())
 
-    while True:
-        ret, img = cam.read()
-        if not ret:
-            print('error')
-            break
-        key = cv2.waitKey(1)
-        if key == 77 or key == 109: # when m or M key is pressed, go to mosaic mode
-          mode = 'mosaic'
-        elif key == 66 or key == 98: # when b or B key is pressed, go to bbox mode
-          mode = 'bbox'
-        elif key == 27: # when ESC key is pressed break
-            break
+  while True:
+    ret, img = cam.read()
+    if not ret:
+      print('error')
+      break
+    key = cv2.waitKey(1)
+    if key == 77 or key == 109: # when m or M key is pressed, go to mosaic mode
+      mode = 'mosaic'
+    elif key == 66 or key == 98: # when b or B key is pressed, go to bbox mode
+      mode = 'bbox'
+    elif key == 27: # when ESC key is pressed break
+        break
 
-        count += 1
-        if count > count_max:
-            img_bgr = cv2.resize(img, (300, 300))
+    count += 1
+    if count > count_max:
+      img_bgr = cv2.resize(img, (300, 300))
 
-            # convert bgr to rgb
-            image_np = img_bgr[:,:,::-1]
-            image_np_expanded = np.expand_dims(image_np, axis=0)
-            start = time.time()
-            output_dict = run_inference_for_single_image(image_np_expanded, detection_graph)
-            elapsed_time = time.time() - start
+      # convert bgr to rgb
+      image_np = img_bgr[:,:,::-1]
+      image_np_expanded = np.expand_dims(image_np, axis=0)
+      start = time.time()
+      output_dict = run_inference_for_single_image(image_np_expanded, detection_graph)
+      elapsed_time = time.time() - start
 
-            for i in range(output_dict['num_detections']):
-              class_id = output_dict['detection_classes'][i]
-              if class_id < len(labels):
-                label = labels[class_id]
-              else:
-                label = 'unknown'
+      for i in range(output_dict['num_detections']):
+        class_id = output_dict['detection_classes'][i]
+        if class_id < len(labels):
+          label = labels[class_id]
+        else:
+          label = 'unknown'
 
-              detection_score = output_dict['detection_scores'][i]
+        detection_score = output_dict['detection_scores'][i]
 
-              # Define bounding box
-              h, w, c = img.shape
-              box = output_dict['detection_boxes'][i] * np.array( \
-                  [h, w,  h, w])
-              box = box.astype(np.int)
+        # Define bounding box
+        h, w, c = img.shape
+        box = output_dict['detection_boxes'][i] * np.array( \
+          [h, w,  h, w])
+        box = box.astype(np.int)
 
-              speed_info = '%s: %f' % ('speed=', elapsed_time)
-              cv2.putText(img, speed_info, (10,50), \
-                  cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
+        speed_info = '%s: %f' % ('speed=', elapsed_time)
+        cv2.putText(img, speed_info, (10,50), \
+          cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
 
-              if mode == 'bbox':
-                # Draw bounding box
-                cv2.rectangle(img, \
-                    (box[1], box[0]), (box[3], box[2]), (0, 0, 255), 3)
+        if mode == 'bbox':
+          # Draw bounding box
+          cv2.rectangle(img, \
+            (box[1], box[0]), (box[3], box[2]), (0, 0, 255), 3)
 
-                # Put label near bounding box
-                information = '%s: %f' % (label, output_dict['detection_scores'][i])
-                cv2.putText(img, information, (box[1], box[2]), \
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
-              elif mode == 'mosaic':
-                img = mosaic_area(img, box[1], box[0], box[3], box[2], ratio=0.05)
+          # Put label near bounding box
+          information = '%s: %f' % (label, output_dict['detection_scores'][i])
+          cv2.putText(img, information, (box[1], box[2]), \
+            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
+        elif mode == 'mosaic':
+          img = mosaic_area(img, box[1], box[0], box[3], box[2], ratio=0.05)
 
-            cv2.imshow('detection result', img)
-            count = 0
+        cv2.imshow('detection result', img)
+        count = 0
 
-    tf_sess.close()
-    cam.release()
-    cv2.destroyAllWindows()
+  tf_sess.close()
+  cam.release()
+  cv2.destroyAllWindows()
