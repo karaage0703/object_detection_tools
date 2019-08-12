@@ -84,7 +84,7 @@ Convert from pbtxt data to label data.
 Execute follwing commands for converting from pbtxt data to label data:
 ```sh
 $ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
-$ python object_detection_tools/scripts/convert_pbtxt_label.py -l='object_detection/data/tf_labl_map.pbtxt' > ./exported_graphs/labels.txt
+$ python object_detection_tools/scripts/convert_pbtxt_label.py -l='object_detection_tools/data/tf_labl_map.pbtxt' > ./exported_graphs/labels.txt
 ```
 
 ## Test trained model
