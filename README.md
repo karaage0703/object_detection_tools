@@ -1,6 +1,19 @@
 # Object Detection Tools
 This repository is useful tools for TensorFlow Object Detection API.
 
+# Only Demo
+　For only demo. Setup Python3.0, TensorFlow.
+ 
+  Then execute following commnads, you can get object detection demo on Mac/Linux PC/Jetson Nano.
+
+```sh
+$ cd && git clone https://github.com/karaage0703/object_detection_tools
+$ cd ~/object_detection_tools/models
+$ ./get_ssdlite_mobilenet_v2_coco_model.sh
+$ cd ~/object_detection_tools
+$ python3 scripts/object_detection.py -l='models/coco-labels-paper.txt' -m='models/ssdlite_mobilenet_v2_coco_2018_05_09/frozen_inference_graph.pb'
+```
+
 # Setup
 Setup Python3.0 and TensorFlow environment.
 
