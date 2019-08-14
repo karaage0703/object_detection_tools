@@ -1,6 +1,19 @@
 # Object Detection Tools
 This repository is useful tools for TensorFlow Object Detection API.
 
+# Only Demo
+　For only demo. Setup Python3.0, TensorFlow.
+ 
+  Then execute following commnads, you can get object detection demo on Mac/Linux PC/Jetson Nano.
+
+```sh
+$ cd && git clone https://github.com/karaage0703/object_detection_tools
+$ cd ~/object_detection_tools/models
+$ ./get_ssdlite_mobilenet_v2_coco_model.sh
+$ cd ~/object_detection_tools
+$ python3 scripts/object_detection.py -l='models/coco-labels-paper.txt' -m='models/ssdlite_mobilenet_v2_coco_2018_05_09/frozen_inference_graph.pb'
+```
+
 # Setup
 Setup Python3.0 and TensorFlow environment.
 
@@ -84,7 +97,7 @@ Convert from pbtxt data to label data.
 Execute follwing commands for converting from pbtxt data to label data:
 ```sh
 $ export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
-$ python object_detection_tools/scripts/convert_pbtxt_label.py -l='object_detection/data/tf_labl_map.pbtxt' > ./exported_graphs/labels.txt
+$ python object_detection_tools/scripts/convert_pbtxt_label.py -l='object_detection_tools/data/tf_labl_map.pbtxt' > ./exported_graphs/labels.txt
 ```
 
 ## Test trained model
