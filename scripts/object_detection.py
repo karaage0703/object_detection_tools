@@ -18,7 +18,6 @@ parser = argparse.ArgumentParser(description='object_detection_tutorial.')
 parser.add_argument('-l', '--labels', default='./object_detection_tools/data/tf_label_map.pbtxt')
 parser.add_argument('-m', '--model', default='./exported_graphs/frozen_inference_graph.pb')
 parser.add_argument('-d', '--device', default='normal_cam') # normal_cam / jetson_nano_raspi_cam / jetson_nano_web_cam
-# parser.add_argument('--mode', default='bbox') # bbox / mosaic
 
 args = parser.parse_args()
 
@@ -139,30 +138,31 @@ if __name__ == '__main__':
 
         detection_score = output_dict['detection_scores'][i]
 
-        # Define bounding box
-        h, w, c = img.shape
-        box = output_dict['detection_boxes'][i] * np.array( \
-          [h, w,  h, w])
-        box = box.astype(np.int)
+        if detection_score > 0.5:
+            # Define bounding box
+            h, w, c = img.shape
+            box = output_dict['detection_boxes'][i] * np.array( \
+              [h, w,  h, w])
+            box = box.astype(np.int)
 
-        speed_info = '%s: %f' % ('speed=', elapsed_time)
-        cv2.putText(img, speed_info, (10,50), \
-          cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
+            speed_info = '%s: %f' % ('speed=', elapsed_time)
+            cv2.putText(img, speed_info, (10,50), \
+              cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
 
-        if mode == 'bbox':
-          # Draw bounding box
-          cv2.rectangle(img, \
-            (box[1], box[0]), (box[3], box[2]), (0, 0, 255), 3)
+            if mode == 'bbox':
+              # Draw bounding box
+              cv2.rectangle(img, \
+                (box[1], box[0]), (box[3], box[2]), (0, 0, 255), 3)
 
-          # Put label near bounding box
-          information = '%s: %f' % (label, output_dict['detection_scores'][i])
-          cv2.putText(img, information, (box[1], box[2]), \
-            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
-        elif mode == 'mosaic':
-          img = mosaic_area(img, box[1], box[0], box[3], box[2], ratio=0.05)
+              # Put label near bounding box
+              information = '%s: %f' % (label, output_dict['detection_scores'][i])
+              cv2.putText(img, information, (box[1], box[2]), \
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
+            elif mode == 'mosaic':
+              img = mosaic_area(img, box[1], box[0], box[3], box[2], ratio=0.05)
 
-        cv2.imshow('detection result', img)
-        count = 0
+      cv2.imshow('detection result', img)
+      count = 0
 
   tf_sess.close()
   cam.release()
