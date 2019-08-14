@@ -9,7 +9,7 @@ parser.add_argument('-l', '--labels', default='./object_detection_tools/data/tf_
 args = parser.parse_args()
 
 category_index = label_map_util.create_category_index_from_labelmap(args.labels, use_display_name=True)
-print(category_index)
+# print(category_index)
 
 for i in range(len(category_index)):
   print(category_index[i+1]['name'])
