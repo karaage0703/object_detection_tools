@@ -15,7 +15,7 @@ if StrictVersion(tf.__version__) < StrictVersion('1.12.0'):
 
 # Path to label and frozen detection graph. This is the actual model that is used for the object detection.
 parser = argparse.ArgumentParser(description='object_detection_tutorial.')
-parser.add_argument('-l', '--labels', default='./object_detection_tools/data/tf_label_map.pbtxt')
+parser.add_argument('-l', '--labels', default='./exported_graphs/labels.txt')
 parser.add_argument('-m', '--model', default='./exported_graphs/frozen_inference_graph.pb')
 parser.add_argument('-d', '--device', default='normal_cam') # normal_cam / jetson_nano_raspi_cam / jetson_nano_web_cam
 
