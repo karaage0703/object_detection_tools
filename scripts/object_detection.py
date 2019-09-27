@@ -25,6 +25,24 @@ detection_graph = tf.Graph()
 
 mode = 'bbox'
 
+colors = [
+  (0, 0, 255),
+  (0, 128, 255), 
+  (0, 255, 255),
+  (0, 255, 128),
+  (0, 255, 0),
+  (128, 255, 0),
+  (255, 255, 0),
+  (255, 128, 0),
+  (255, 0, 0),
+  (255, 0, 128),
+  (255, 0, 255),
+  (128, 0, 255),
+  (128, 0, 0),
+  (0, 128, 0),
+  (0, 0, 128)
+]
+
 def load_graph():
   with detection_graph.as_default():
     od_graph_def = tf.GraphDef()
@@ -150,14 +168,16 @@ if __name__ == '__main__':
               cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
 
             if mode == 'bbox':
+              color = colors[class_id] if class_id < len(colors) else colors[len(colors)-1]
+
               # Draw bounding box
               cv2.rectangle(img, \
-                (box[1], box[0]), (box[3], box[2]), (0, 0, 255), 3)
+                (box[1], box[0]), (box[3], box[2]), color, 3)
 
               # Put label near bounding box
               information = '%s: %f' % (label, output_dict['detection_scores'][i])
               cv2.putText(img, information, (box[1], box[2]), \
-                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
+                cv2.FONT_HERSHEY_SIMPLEX, 1, color, 1, cv2.LINE_AA)
             elif mode == 'mosaic':
               img = mosaic_area(img, box[1], box[0], box[3], box[2], ratio=0.05)
 
