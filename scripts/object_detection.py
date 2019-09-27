@@ -14,10 +14,11 @@ if StrictVersion(tf.__version__) < StrictVersion('1.12.0'):
   raise ImportError('Please upgrade your TensorFlow installation to v1.12.*.')
 
 # Path to label and frozen detection graph. This is the actual model that is used for the object detection.
-parser = argparse.ArgumentParser(description='object_detection_tutorial.')
-parser.add_argument('-l', '--labels', default='./exported_graphs/labels.txt')
-parser.add_argument('-m', '--model', default='./exported_graphs/frozen_inference_graph.pb')
-parser.add_argument('-d', '--device', default='normal_cam') # normal_cam / jetson_nano_raspi_cam / jetson_nano_web_cam
+parser = argparse.ArgumentParser(description='object detection tester, using webcam or movie file')
+parser.add_argument('-l', '--labels', default='./exported_graphs/labels.txt', help="default: './exported_graphs/labels.txt'")
+parser.add_argument('-m', '--model', default='./exported_graphs/frozen_inference_graph.pb', help="default: './exported_graphs/frozen_inference_graph.pb'")
+parser.add_argument('-d', '--device', default='normal_cam', help="normal_cam, jetson_nano_raspi_cam, jetson_nano_web_cam, or video_file. default: 'normal_cam'") # normal_cam / jetson_nano_raspi_cam / jetson_nano_web_cam
+parser.add_argument('-i', '--input_video_file', default='', help="Input video file")
 
 args = parser.parse_args()
 
@@ -97,6 +98,11 @@ def run_inference_for_single_image(image, graph):
   output_dict['detection_scores'] = output_dict['detection_scores'][0]
   return output_dict
 
+if args.input_video_file != "":
+  # WORKAROUND
+  print("[Info] --input_video_file has an argument. so --device was replaced to 'video_file'.")
+  args.device = "video_file"
+
 # Switch camera according to device
 if args.device == 'normal_cam':
   cam = cv2.VideoCapture(0)
@@ -109,8 +115,11 @@ elif args.device == 'jetson_nano_raspi_cam':
   cam = cv2.VideoCapture(GST_STR, cv2.CAP_GSTREAMER) # Raspi cam
 elif args.device == 'jetson_nano_web_cam':
   cam = cv2.VideoCapture(1)
+elif args.device == 'video_file':
+  cam = cv2.VideoCapture(args.input_video_file)
 else:
-  print('wrong device')
+  print('[Error] --device: wrong device')
+  parser.print_help()
   sys.exit()
 
 count_max = 0
@@ -163,7 +172,7 @@ if __name__ == '__main__':
               [h, w,  h, w])
             box = box.astype(np.int)
 
-            speed_info = '%s: %f' % ('speed=', elapsed_time)
+            speed_info = '%s: %.3f' % ('fps', 1.0/elapsed_time)
             cv2.putText(img, speed_info, (10,50), \
               cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
 
@@ -175,8 +184,8 @@ if __name__ == '__main__':
                 (box[1], box[0]), (box[3], box[2]), color, 3)
 
               # Put label near bounding box
-              information = '%s: %f' % (label, output_dict['detection_scores'][i])
-              cv2.putText(img, information, (box[1], box[2]), \
+              information = '%s: %.1f%%' % (label, output_dict['detection_scores'][i] * 100.0)
+              cv2.putText(img, information, (box[1] + 15, box[2] - 15), \
                 cv2.FONT_HERSHEY_SIMPLEX, 1, color, 1, cv2.LINE_AA)
             elif mode == 'mosaic':
               img = mosaic_area(img, box[1], box[0], box[3], box[2], ratio=0.05)
