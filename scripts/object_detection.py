@@ -124,6 +124,12 @@ elif args.device == 'jetson_nano_raspi_cam':
   cam = cv2.VideoCapture(GST_STR, cv2.CAP_GSTREAMER) # Raspi cam
 elif args.device == 'jetson_nano_web_cam':
   cam = cv2.VideoCapture(1)
+elif args.device == 'raspi_cam':
+  from picamera.array import PiRGBArray
+  from picamera import PiCamera
+  cam = PiCamera()
+  cam.resolution = (640, 480)
+  stream = PiRGBArray(cam)
 elif args.device == 'video_file':
   cam = cv2.VideoCapture(args.input_video_file)
 else:
@@ -142,10 +148,15 @@ if __name__ == '__main__':
       labels.append(line.rstrip())
 
   while True:
-    ret, img = cam.read()
-    if not ret:
-      print('error')
-      break
+    if args.device == 'raspi_cam':
+      cam.capture(stream, 'bgr', use_video_port=True)
+      img = stream.array
+    else:
+      ret, img = cam.read()
+      if not ret:
+        print('error')
+        break
+
     key = cv2.waitKey(1)
     if key == 77 or key == 109: # when m or M key is pressed, go to mosaic mode
       mode = 'mosaic'
@@ -201,6 +212,9 @@ if __name__ == '__main__':
 
       cv2.imshow('detection result', img)
       count = 0
+    if args.device == 'raspi_cam':
+      stream.seek(0)
+      stream.truncate()
 
   tf_sess.close()
   cam.release()
