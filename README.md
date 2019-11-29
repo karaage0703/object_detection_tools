@@ -4,7 +4,7 @@ This repository is useful tools for TensorFlow Object Detection API.
 # Only Demo
 　For only demo. Setup Python3.0, TensorFlow.
  
-  Then execute following commnads, you can get object detection demo on Mac/Linux PC/Jetson Nano.
+  Then execute following commnads, you can get object detection demo on Mac/Linux PC/Jetson Nano/Raspberry Pi.
 
 ```sh
 $ cd && git clone https://github.com/karaage0703/object_detection_tools

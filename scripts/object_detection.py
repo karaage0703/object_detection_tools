@@ -17,7 +17,7 @@ if StrictVersion(tf.__version__) < StrictVersion('1.12.0'):
 parser = argparse.ArgumentParser(description='object detection tester, using webcam or movie file')
 parser.add_argument('-l', '--labels', default='./exported_graphs/labels.txt', help="default: './exported_graphs/labels.txt'")
 parser.add_argument('-m', '--model', default='./exported_graphs/frozen_inference_graph.pb', help="default: './exported_graphs/frozen_inference_graph.pb'")
-parser.add_argument('-d', '--device', default='normal_cam', help="normal_cam, jetson_nano_raspi_cam, jetson_nano_web_cam, or video_file. default: 'normal_cam'") # normal_cam / jetson_nano_raspi_cam / jetson_nano_web_cam
+parser.add_argument('-d', '--device', default='normal_cam', help="normal_cam, jetson_nano_raspi_cam, jetson_nano_web_cam, raspi_cam, or video_file. default: 'normal_cam'") # normal_cam / jetson_nano_raspi_cam / jetson_nano_web_cam
 parser.add_argument('-i', '--input_video_file', default='', help="Input video file")
 
 args = parser.parse_args()
@@ -28,9 +28,9 @@ mode = 'bbox'
 
 colors = [
   (0, 0, 255),
-  (0, 64, 255), 
-  (0, 128, 255), 
-  (0, 192, 255), 
+  (0, 64, 255),
+  (0, 128, 255),
+  (0, 192, 255),
   (0, 255, 255),
   (0, 255, 192),
   (0, 255, 128),
@@ -197,7 +197,8 @@ if __name__ == '__main__':
               cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 1, cv2.LINE_AA)
 
             if mode == 'bbox':
-              color = colors[class_id] if class_id < len(colors) else colors[len(colors)-1]
+              class_id = class_id % len(colors)
+              color = colors[class_id]
 
               # Draw bounding box
               cv2.rectangle(img, \
