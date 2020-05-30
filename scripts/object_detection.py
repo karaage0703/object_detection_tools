@@ -10,8 +10,11 @@ import tensorflow as tf
 
 from distutils.version import StrictVersion
 
-if StrictVersion(tf.__version__) < StrictVersion('1.12.0'):
-  raise ImportError('Please upgrade your TensorFlow installation to v1.12.*.')
+try:
+  if StrictVersion(tf.__version__) < StrictVersion('1.12.0'):
+    raise ImportError('Please upgrade your TensorFlow installation to v1.12.*.')
+except:
+  pass
 
 # Path to label and frozen detection graph. This is the actual model that is used for the object detection.
 parser = argparse.ArgumentParser(description='object detection tester, using webcam or movie file')
@@ -117,8 +120,8 @@ if args.device == 'normal_cam':
   cam = cv2.VideoCapture(0)
 elif args.device == 'jetson_nano_raspi_cam':
   GST_STR = 'nvarguscamerasrc \
-    ! video/x-raw(memory:NVMM), width=3280, height=2464, format=(string)NV12, framerate=(fraction)30/1 \
-    ! nvvidconv ! video/x-raw, width=(int)1920, height=(int)1080, format=(string)BGRx \
+    ! video/x-raw(memory:NVMM), width=1920, height=1080, format=(string)NV12, framerate=(fraction)30/1 \
+    ! nvvidconv ! video/x-raw, width=(int)640, height=(int)480, format=(string)BGRx \
     ! videoconvert \
     ! appsink'
   cam = cv2.VideoCapture(GST_STR, cv2.CAP_GSTREAMER) # Raspi cam
