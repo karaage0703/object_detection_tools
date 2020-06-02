@@ -123,7 +123,7 @@ elif args.device == 'jetson_nano_raspi_cam':
     ! video/x-raw(memory:NVMM), width=1920, height=1080, format=(string)NV12, framerate=(fraction)30/1 \
     ! nvvidconv ! video/x-raw, width=(int)640, height=(int)480, format=(string)BGRx \
     ! videoconvert \
-    ! appsink'
+    ! appsink drop=true sync=false'
   cam = cv2.VideoCapture(GST_STR, cv2.CAP_GSTREAMER) # Raspi cam
 elif args.device == 'jetson_nano_web_cam':
   cam = cv2.VideoCapture(1)
