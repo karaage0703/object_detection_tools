@@ -1,11 +1,24 @@
 # Object Detection Tools
 This repository is useful tools for TensorFlow Object Detection API.
 
-# Only Demo
-　For only demo. Setup Python3.0, TensorFlow.
- 
-  Then execute following commnads, you can get object detection demo on Mac/Linux PC/Jetson Nano/Raspberry Pi.
+![object_detection_demo](https://cdn-ak.f.st-hatena.com/images/fotolife/k/karaage/20190525/20190525165632.gif)
 
+# Only Demo
+　For only demo. Setup Python3.x, TensorFlow 1.x or TensorFlow 2.x, OpenCV.
+
+Then execute following commnads, you can get object detection demo on Mac/Linux PC/Jetson Nano/Raspberry Pi.
+
+
+## TensorFlow 2.x
+```sh
+$ cd && git clone https://github.com/karaage0703/object_detection_tools
+$ cd ~/object_detection_tools/models
+$ ./get_efficientdet_d0_coco17_tpu-32.sh
+$ cd ~/object_detection_tools
+$ python3 scripts/object_detection_tf2.py -l='./models/coco-labels-paper.txt' -m='./models/efficientdet_d0_coco17_tpu-32/saved_model/'
+```
+
+## TensorFlow 1.x
 ```sh
 $ cd && git clone https://github.com/karaage0703/object_detection_tools
 $ cd ~/object_detection_tools/models
@@ -15,11 +28,12 @@ $ python3 scripts/object_detection.py -l='models/coco-labels-paper.txt' -m='mode
 ```
 
 # Setup
-Setup Python3.0 and TensorFlow environment.
+Setup Python3.x and TensorFlow environment.
 
 And get TensorFlow Models repository.
 
 Execute following commands for download TensorFlow Object Detection API and change directory:
+
 ```sh
 $ git clone https://github.com/tensorflow/models
 $ cd models/research
@@ -46,7 +60,9 @@ $ ./get_ssd_inception_v2_coco_model.sh
 
 ## Test Prediction
 Execute following commands at `object_detection_tools` after downloading ssd_inception_v2_coco_model data:
+
 ```sh
+$ cd ~/object_detection_tools
 $ python scripts/object_detection.py -l='models/coco-labels-paper.txt' -m='models/ssd_inception_v2_coco_2018_01_28/frozen_inference_graph.pb'
 ```
 
